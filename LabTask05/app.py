@@ -1,17 +1,22 @@
-## Create an interactive app: not jupyter notebook
-
 import streamlit as st
 import json
+import numpy as np
 import pandas as pd
 import plotly.express as px
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
+# App header
 st.title("Business Location Explorer")
-st.write("Wassup")
+st.subheader("Lab Task 05")
+st.write("Submission for Atif M. Mahmud")
+st.write("SFU ID: atifm@sfu.ca")
+
 
 # TODO: cache a function and data
+# Not now, maybe later
 
 ## Create a dataframe from data source
 def load_data(path="business_locations.geojson"):
@@ -25,15 +30,16 @@ def load_data(path="business_locations.geojson"):
     return pd.DataFrame(rows)
 
 df = load_data()
+
+st.header("The data source")
 st.dataframe(df)
 
-
 # Click to expand box thingy
-with st.expander("Description of Data:"):
+with st.expander("Descriptive statistics on our data:"):
     st.dataframe(df.describe())
     st.write(f"{len(df)} locations")
 
-st.write("The columns")
+st.subheader("These are the columns in our source")
 st.write(df.columns)
 
 st.sidebar.header("1. Select Features")
@@ -57,13 +63,20 @@ if algo == "KMeans":
     k = st.sidebar.slider("Number of clusters", 2, 15)
     model = KMeans(n_clusters=k)
     labels = model.fit_predict(X_scaled)
-elif algo == "DBScan":
-    st.write("STUDENTS, ADD A DB SCAN")
 
-# Catch if no labels
-#if not len(labels) <= 0:
-#    st.warning("There are no labels")
-#    st.stop()
+### =========================================================================
+## THIS IS LAB TASK SUBMISSION
+### =========================================================================
+
+elif algo == "DBScan":
+    epsilon = st.sidebar.slider("Radius of cluster", 0.01, 1.0)
+    n_points = st.sidebar.slider("Number of points in cluster", 1, 20)
+    model = DBSCAN(eps=epsilon, min_samples=n_points)
+    labels = model.fit_predict(X_scaled)
+
+### =========================================================================
+###
+###==========================================================================
 
 df["cluster"] = pd.Categorical(labels.astype(str))
 n_clusters_found = df["cluster"].nunique()
@@ -72,7 +85,7 @@ st.metric("Number of clusters:", n_clusters_found)
 map_tab, dr_tab = st.tabs(["Map", "Dimensionality Reduction"])
 
 with map_tab:
-    st.write("I'm a map I'm a map")
+    st.write("I'm a map I'm a map....")
     fig = px.scatter_map(df, lat="lat", lon="lon", zoom=10, height=550, map_style="carto-darkmatter", color="cluster")
     st.plotly_chart(fig, width="stretch")
 
